@@ -85,8 +85,8 @@ class Custom_Data(data.Dataset):
         for i in range(len(anno_imgs)):
             segmap = create_anno(np.array(Image.open(anno_imgs[i])))
             if (len(np.unique(segmap))>=3 and len(segmap[segmap == 0])<thresh):
-                raw_new = np.append(raw_new, raw_imgs[i])
-                anno_new = np.append(anno_new, anno_imgs[i])
+                raw_new = np.append(np.append(raw_new, raw_imgs[i]), raw_imgs[i])
+                anno_new = np.append(np.append(anno_new, anno_imgs[i]), anno_imgs[i])
 
         print(len(raw_imgs), len(raw_new))
         self.raw_img = raw_new
@@ -107,14 +107,11 @@ class Custom_Data(data.Dataset):
         # print(raw_img_path, anno_img_path)
 
         # Perform data augmentations to generate 2 sets of augmented data
-        raw_aug1, seg_aug1 = seq(image=raw_img, segmentation_maps=seg_map)
-        anno_aug1 = seg_aug1.draw()[0]
-        anno_aug1 = seg_to_anno(anno_aug1)
+        raw_aug, seg_aug = seq(image=raw_img, segmentation_maps=seg_map)
+        anno_aug = seg_aug.draw()[0]
+        anno_aug = seg_to_anno(anno_aug)
 
-        raw_aug2, seg_aug2 = seq(image=raw_img, segmentation_maps=seg_map)
-        anno_aug2 = seg_aug2.draw()[0]
-        anno_aug2 = seg_to_anno(anno_aug2)
-
+        # Plot images to compare
         if plots:
             plt.figure()
             plt.subplot(2,2,1)
@@ -122,12 +119,12 @@ class Custom_Data(data.Dataset):
             plt.subplot(2,2,2)
             plt.imshow(anno_img)
             plt.subplot(2,2,3)
-            plt.imshow(raw_aug1)
+            plt.imshow(raw_aug)
             plt.subplot(2,2,4)
-            plt.imshow(anno_aug1)
+            plt.imshow(anno_aug)
             plt.show()
 
-        return (raw_aug1, raw_aug2, anno_aug1, anno_aug2)
+        return (raw_aug, anno_aug)
 
     def __len__(self):
         return len(self.raw_img)
@@ -142,24 +139,22 @@ data_len = train_data.__len__()
 # Test with data loader
 train_loader = DataLoader(train_data, batch_size=5, shuffle=True)
 start = time()
-for (raw_aug1, raw_aug2, anno_aug1, anno_aug2) in train_loader:
+for (raw_aug, anno_aug) in train_loader:
     break
 end = time()
 print(end-start)
 
-print(raw_aug1.shape)
-print(anno_aug1.shape)
+print(raw_aug.shape)
+print(anno_aug.shape)
 
 # Test with manual loop
 start = time()
-imgs = np.zeros((batches*2,crop_size,crop_size,3))
-annos = np.zeros((batches*2,crop_size,crop_size))
-for i in range(0,batches*2,2):
-    (img1, img2, anno1, anno2) = train_data.__getitem__(index=i)
-    imgs[i] = img1
-    annos[i] = anno1
-    imgs[i+1] = img2
-    annos[i+1] = anno2
+imgs = np.zeros((batches,crop_size,crop_size,3))
+annos = np.zeros((batches,crop_size,crop_size))
+for i in range(batches):
+    (img, anno) = train_data.__getitem__(index=i)
+    imgs[i] = img
+    annos[i] = anno
 end = time()
 print(end-start)
 

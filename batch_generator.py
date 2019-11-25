@@ -16,7 +16,7 @@ from time import time
 path_train = '/Users/cmiao/Cellari-Deeplearning-Course/train/cropped/raw'
 path_anno = '/Users/cmiao/Cellari-Deeplearning-Course/train/cropped/anno'
 
-batches = 5
+batches = 10
 crop_size = 256
 
 # ============================================================================
@@ -45,19 +45,15 @@ mapping2 = {
 # Convert original segmap to 2d with classes
 def create_anno(anno):
     anno_reshaped = rgb2gray(anno).astype(int)
-    # print(np.unique(anno_reshaped))
     for k in mapping:
         anno_reshaped[anno_reshaped==k] = mapping[k]
-    # print(np.unique(anno_reshaped))
     return anno_reshaped
 
 # Convert imgaug segmap to 2d with classes
 def seg_to_anno(seg):
     anno = rgb2gray(seg).astype(int)
-    # print(np.unique(anno))
     for k in mapping2:
         anno[anno==k] = mapping2[k]
-    # print(np.unique(anno))
     return anno
 
 # ============================================================================
@@ -68,7 +64,7 @@ seq = iaa.Sequential([
     # iaa.Dropout(p=(0, 0.1)),
     # iaa.Sharpen((0.0, 1.0)),
     # iaa.ElasticTransformation(alpha=50, sigma=5),
-    iaa.CropToFixedSize(width=256, height=256)
+    iaa.CropToFixedSize(width=crop_size, height=crop_size)
 ], random_order=False)
 
 # Class to load + process data
